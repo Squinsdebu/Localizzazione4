@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Localizzazione 3</string>
+    <string name = "my_map_api_key">AIzaSyAeZYBsAlku0-Y3-G0Sx1GcyOzRpjtpr5o</string>
+</resources>
