@@ -10,9 +10,5 @@
 
 
     <!--SpalshScreen-->
-    <style name="SplashScreen" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:windowBackground">@drawable/logo</item>
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimary</item>
 
-    </style>
 </resources>
