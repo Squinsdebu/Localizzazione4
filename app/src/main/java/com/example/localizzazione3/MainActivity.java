@@ -11,10 +11,8 @@ import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -31,8 +29,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient fusedLocationClient;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private MediaRecorder mediaRecorder;
-    private TelephonyManager telephonyManager;
-    private int signalQuality;
     private static final int REQUEST_PHONE_PERMISSION = 1;
     private Button signalButton;
 
@@ -42,9 +38,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        // ...
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        // ...
+
 
         richiediAutorizzazioni();
         signalButton = findViewById(R.id.button);
@@ -88,21 +84,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(this, location -> {
                     if (location != null) {
-                        double latitude = location.getLatitude();
+                        double latitude = location.getLatitude(); // coordinate attuali
                         double longitude = location.getLongitude();
-                        // Utilizza le coordinate latitude e longitude come desideri
                         LatLng sydney = new LatLng(latitude,longitude);
                         myMap.addMarker(new MarkerOptions().position(sydney).title("Sydney"));
                         //myMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-                        float zoomLevel = 15f; // Imposta il livello di zoom desiderato
+                        float zoomLevel = 15f; // livello di zoom
                         myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, zoomLevel));
                     } else {
-                        // Gestisci il caso in cui la posizione è nulla
+                        // Se la posizione è nulla, rimando a sydney
+                        LatLng sydney = new LatLng(-34,151);
+                        myMap.addMarker(new MarkerOptions().position(sydney).title("Sydney"));
+                        float zoomLevel = 15f;
+                        myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, zoomLevel));
                     }
                 })
-                .addOnFailureListener(this, e -> {
-                    // Gestisci eventuali errori nell'ottenimento della posizione
-                });
+                .addOnFailureListener(this, e -> Toast.makeText(this, "Errore nell'ottenimento della posizione", Toast.LENGTH_SHORT).show());
 
     }
     private void inizializzaAudio(){
@@ -128,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Ad esempio, puoi aggiornare un'interfaccia utente o effettuare calcoli basati su di esso
 
                 try {
-                    Thread.sleep(1000); // Attendi 1 secondo prima di rileggere il volume
+                    Thread.sleep(10000); // Attendi 1 secondo prima di rileggere il volume
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
