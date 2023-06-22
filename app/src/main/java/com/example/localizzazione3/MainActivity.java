@@ -17,6 +17,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -31,21 +32,59 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private MediaRecorder mediaRecorder;
     private static final int REQUEST_PHONE_PERMISSION = 1;
     private Button signalButton;
+    private MapView mapView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
+        mapView = findViewById(R.id.map);
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
 
         richiediAutorizzazioni();
         signalButton = findViewById(R.id.button);
         signalButton.setOnClickListener(v -> checkPhonePermission());
+       /* SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+*/
     }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mapView.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mapView.onDestroy();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mapView.onSaveInstanceState(outState);
+    }
+
+
     private void checkPhonePermission() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -84,24 +123,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(this, location -> {
                     if (location != null) {
-                        double latitude = location.getLatitude(); // coordinate attuali
+                        double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
-                        LatLng sydney = new LatLng(latitude,longitude);
-                        myMap.addMarker(new MarkerOptions().position(sydney).title("Sydney"));
-                        //myMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-                        float zoomLevel = 15f; // livello di zoom
-                        myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, zoomLevel));
+                        LatLng currentLocation = new LatLng(latitude, longitude);
+                        myMap.addMarker(new MarkerOptions().position(currentLocation).title("Current Location"));
+                        myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15f));
                     } else {
-                        // Se la posizione è nulla, rimando a sydney
-                        LatLng sydney = new LatLng(-34,151);
-                        myMap.addMarker(new MarkerOptions().position(sydney).title("Sydney"));
-                        float zoomLevel = 15f;
-                        myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, zoomLevel));
+                        Toast.makeText(this, "Impossibile ottenere la posizione attuale", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(this, e -> Toast.makeText(this, "Errore nell'ottenimento della posizione", Toast.LENGTH_SHORT).show());
-
     }
+
+
+
+
     private void inizializzaAudio(){
         // Inizializza il MediaRecorder per acquisire l'audio
         mediaRecorder = new MediaRecorder();
@@ -147,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onPause() {
         super.onPause();
+        mapView.onPause();
         if (mediaRecorder != null) {
             mediaRecorder.stop();
             mediaRecorder.release();
@@ -203,10 +240,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
-        myMap = googleMap;
-        LatLng sydney = new LatLng(-34,151);
-        myMap.addMarker(new MarkerOptions().position(sydney).title("Sydney"));
-        myMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+            myMap = googleMap;
+            ottieniPosizioneAttuale();
+
     }
 }
 
