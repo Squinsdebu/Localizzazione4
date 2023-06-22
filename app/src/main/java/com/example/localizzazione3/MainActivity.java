@@ -11,6 +11,7 @@ import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -32,28 +33,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private MediaRecorder mediaRecorder;
     private static final int REQUEST_PHONE_PERMISSION = 1;
     private Button signalButton;
+
+
     private MapView mapView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+       // inizializzaAudio();
+        Button button5 = findViewById(R.id.button5);
         mapView = findViewById(R.id.map);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         richiediAutorizzazioni();
         signalButton = findViewById(R.id.button);
         signalButton.setOnClickListener(v -> checkPhonePermission());
+
        /* SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mapFragment.getMapAsync(this);*/
+        button5.setOnClickListener(v -> {
+            double audioLevel = getMicrophoneVolume();
+            String message = "Audio Level: " + audioLevel;
+            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+        });
 
-*/
     }
-
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -136,8 +142,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-
-
     private void inizializzaAudio(){
         // Inizializza il MediaRecorder per acquisire l'audio
         mediaRecorder = new MediaRecorder();
@@ -149,25 +153,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         try {
             mediaRecorder.prepare();
             mediaRecorder.start();
+            Log.d("AudioError", "Registrazione audio avviata");
         } catch (IOException e) {
             e.printStackTrace();
+            Log.e("AudioError", "Errore durante l'inizializzazione dell'audio", e);
         }
 
-        // Avvia un thread per monitorare continuamente il volume del microfono
-        Thread volumeThread = new Thread(() -> {
-            while (true) {
-                double volume = getMicrophoneVolume();
-                // Fai qualcosa con il valore del volume (in dB)
-                // Ad esempio, puoi aggiornare un'interfaccia utente o effettuare calcoli basati su di esso
-
-                try {
-                    Thread.sleep(10000); // Attendi 1 secondo prima di rileggere il volume
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        volumeThread.start();
     }
     // Metodo per ottenere il volume attuale del microfono
     private double getMicrophoneVolume() {
