@@ -22,9 +22,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+    private static final int REQUEST_AUDIO_PERMISSION = 2;
     private GoogleMap myMap;
     private FusedLocationProviderClient fusedLocationClient;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
@@ -37,14 +37,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
+        assert mapFragment != null;
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
 
         richiediAutorizzazioni();
         signalButton = findViewById(R.id.button);
         signalButton.setOnClickListener(v -> checkPhonePermission());
+
+
     }
     private void checkPhonePermission() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE)
@@ -58,15 +58,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void richiediAutorizzazioni() {
+
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
             ActivityCompat.requestPermissions(this, new String[]{
                     android.Manifest.permission.ACCESS_FINE_LOCATION,
                     android.Manifest.permission.ACCESS_COARSE_LOCATION
             }, REQUEST_LOCATION_PERMISSION);
-        } else {
-            ottieniPosizioneAttuale();
-           // inizializzaAudio();
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.RECORD_AUDIO}, REQUEST_AUDIO_PERMISSION);
+            } else {
+                ottieniPosizioneAttuale();
+                //inizializzaAudio();
+            }
         }
     }
 
@@ -102,48 +107,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .addOnFailureListener(this, e -> Toast.makeText(this, "Errore nell'ottenimento della posizione", Toast.LENGTH_SHORT).show());
 
     }
-    private void inizializzaAudio(){
-        // Inizializza il MediaRecorder per acquisire l'audio
-        mediaRecorder = new MediaRecorder();
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        mediaRecorder.setOutputFile("/dev/null");
 
-        try {
-            mediaRecorder.prepare();
-            mediaRecorder.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        // Avvia un thread per monitorare continuamente il volume del microfono
-        Thread volumeThread = new Thread(() -> {
-            while (true) {
-                double volume = getMicrophoneVolume();
-                // Fai qualcosa con il valore del volume (in dB)
-                // Ad esempio, puoi aggiornare un'interfaccia utente o effettuare calcoli basati su di esso
-
-                try {
-                    Thread.sleep(10000); // Attendi 1 secondo prima di rileggere il volume
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        volumeThread.start();
-    }
-    // Metodo per ottenere il volume attuale del microfono
-    private double getMicrophoneVolume() {
-        if (mediaRecorder != null) {
-            int amplitude = mediaRecorder.getMaxAmplitude();
-            if (amplitude > 0) {
-                double volume = 20 * Math.log10(amplitude);
-                return volume;
-            }
-        }
-        return 0;
-    }
     @Override
     protected void onPause() {
         super.onPause();
@@ -200,7 +165,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         myMap = googleMap;
@@ -209,9 +173,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         myMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 }
-
-
-
-
 
 
