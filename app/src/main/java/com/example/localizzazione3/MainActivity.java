@@ -24,13 +24,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
-    private static final int REQUEST_AUDIO_PERMISSION = 2;
     private GoogleMap myMap;
     private FusedLocationProviderClient fusedLocationClient;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private MediaRecorder mediaRecorder;
     private static final int REQUEST_PHONE_PERMISSION = 1;
-    private Button signalButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,10 +36,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         assert mapFragment != null;
+        mapFragment.getMapAsync(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         richiediAutorizzazioni();
-        signalButton = findViewById(R.id.button);
+        Button signalButton = findViewById(R.id.button);
         signalButton.setOnClickListener(v -> checkPhonePermission());
 
 
@@ -66,24 +65,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     android.Manifest.permission.ACCESS_FINE_LOCATION,
                     android.Manifest.permission.ACCESS_COARSE_LOCATION
             }, REQUEST_LOCATION_PERMISSION);
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.RECORD_AUDIO}, REQUEST_AUDIO_PERMISSION);
             } else {
-                ottieniPosizioneAttuale();
+               // ottieniPosizioneAttuale();
                 //inizializzaAudio();
             }
         }
-    }
+
 
     private void ottieniPosizioneAttuale() {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
         fusedLocationClient.getLastLocation()
@@ -108,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -119,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -127,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 ottieniPosizioneAttuale();
             } else {
-                // Gestisci il caso in cui l'utente non ha concesso le autorizzazioni
+                Toast.makeText(this, "Le autorizzazioni sono necessarie per utilizzare questa funzionalità", Toast.LENGTH_SHORT).show();
             }
         }
         if (requestCode == REQUEST_PHONE_PERMISSION) {
@@ -138,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
-    private void getSignalStrength() {
+    private void getSignalStrength() { // stampa del valore della calculateSignalQuality()
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         if (telephonyManager != null) {
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -150,20 +139,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private int calculateSignalQuality(SignalStrength signalStrength) {
-        // Calcola la qualità del segnale in base ai valori forniti da SignalStrength
-        // Implementa la logica di calcolo appropriata per le tue esigenze specifiche
-        // Restituisce un valore intero che rappresenta la qualità del segnale
-
-        // Esempio di implementazione: Restituisce il livello di segnale CDMA (0-4)
+        // calcola la qualità del segnale e la resittuisce come numero intero
         if (signalStrength.isGsm()) {
-            int gsmSignalStrength = signalStrength.getGsmSignalStrength();
-            int signalQuality = (gsmSignalStrength >= 0 && gsmSignalStrength <= 31) ? gsmSignalStrength / 8 : -1;
-            return signalQuality;
+            return signalStrength.getGsmSignalStrength();
         } else {
             return -1;
         }
     }
-
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
@@ -171,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng sydney = new LatLng(-34,151);
         myMap.addMarker(new MarkerOptions().position(sydney).title("Sydney"));
         myMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        ottieniPosizioneAttuale();
     }
 }
-
 
